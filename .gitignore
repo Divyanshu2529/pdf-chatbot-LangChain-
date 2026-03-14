@@ -1,4 +1,4 @@
 node_modules/
 .env
 .DS_Store
-dist/git rm -r --cached backend/node_modules
+dist/
