@@ -32,7 +32,7 @@ export const uploadPdf = async (req, res) => {
 
     const embeddingsModel = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GOOGLE_API_KEY,
-      model: "text-embedding-004",
+      model: "embedding-001",
     });
 
     const embeddings = await embeddingsModel.embedDocuments(chunks);
