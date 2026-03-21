@@ -5,7 +5,7 @@ export default function App() {
   const [file, setFile] = useState(null);
   const [uploadMsg, setUploadMsg] = useState("");
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleUpload = async () => {
@@ -32,23 +32,35 @@ export default function App() {
   const handleAsk = async () => {
     if (!question.trim()) return;
 
+    const userMessage = { type: "user", text: question };
+    setMessages((prev) => [...prev, userMessage]);
+
     try {
       setLoading(true);
+
       const res = await axios.post("http://localhost:5050/api/ask", {
         question,
       });
-      setAnswer(res.data.answer);
+
+      const botMessage = { type: "bot", text: res.data.answer };
+
+      setMessages((prev) => [...prev, botMessage]);
+      setQuestion("");
     } catch (error) {
       console.error(error);
-      setAnswer("Error getting answer");
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", text: "Error getting answer" },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-100 flex justify-center p-6">
       <div className="w-full max-w-2xl space-y-6">
+
         <h1 className="text-3xl font-bold text-center text-black">
           📄 PDF Chatbot
         </h1>
@@ -71,43 +83,54 @@ export default function App() {
             Upload
           </button>
 
-          {loading && (
-            <p className="mt-2 text-sm text-gray-600">Loading...</p>
-          )}
-
           {uploadMsg && (
             <p className="mt-2 text-sm text-gray-700">{uploadMsg}</p>
           )}
         </div>
 
         {/* Chat */}
-        <div className="bg-white p-5 rounded-xl shadow">
+        <div className="bg-white p-5 rounded-xl shadow flex flex-col h-[400px]">
           <h2 className="font-semibold mb-3 text-black">Ask Question</h2>
 
-          <textarea
-            rows="4"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask something about the uploaded PDF..."
-            className="w-full border rounded p-2 mb-3 text-black"
-          />
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto space-y-3 mb-3">
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`max-w-[80%] p-3 rounded-lg ${
+                  msg.type === "user"
+                    ? "bg-blue-600 text-white ml-auto"
+                    : "bg-gray-200 text-black"
+                }`}
+              >
+                {msg.text}
+              </div>
+            ))}
 
-          <button
-            onClick={handleAsk}
-            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-          >
-            Ask
-          </button>
+            {loading && (
+              <p className="text-sm text-gray-500">Thinking...</p>
+            )}
+          </div>
 
-          {answer && (
-            <div className="mt-4 p-3 bg-gray-50 rounded">
-              <h3 className="font-semibold text-black">Answer:</h3>
-              <p className="mt-2 text-gray-800 whitespace-pre-line">
-                {answer}
-              </p>
-            </div>
-          )}
+          {/* Input */}
+          <div>
+            <textarea
+              rows="2"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="Ask something about the uploaded PDF..."
+              className="w-full border rounded p-2 mb-2 text-black"
+            />
+
+            <button
+              onClick={handleAsk}
+              className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+            >
+              Ask
+            </button>
+          </div>
         </div>
+
       </div>
     </div>
   );
